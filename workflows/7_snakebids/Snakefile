@@ -1,0 +1,99 @@
+from snakebids import bids 
+
+configfile: "config/config.yaml"
+
+
+rule bet:
+    input:
+        t1w=bids(
+            root="data",
+            subject="{subject}",
+            session="{session}",
+            datatype="anat",
+            suffix="T1w.nii.gz"
+        ),
+    output:
+        brain=bids(
+            root="out/bet",
+            subject="{subject}",
+            session="{session}",
+            datatype="anat",
+            desc="brainthreshold{threshold}",
+            suffix="T1w.nii.gz"
+        )
+    params:
+        threshold=lambda wildcards: f"0.{wildcards.threshold}",
+    shell:
+        "bet {input} {output} -f {params.threshold}"
+
+
+rule bias_field_correction:
+    input:
+        brain=rules.bet.output.brain,
+    output:
+        corrected=bids(
+            root="out/biasfieldcorrection",
+            subject="{subject}",
+            session="{session}",
+            datatype="anat",
+            desc="correctedbrainthreshold{threshold}",
+            suffix="T1w.nii.gz"
+        )
+    shell:
+        "N4BiasFieldCorrection -d 3 -i {input.brain} -o {output.corrected}"
+
+
+rule calc_avg_brain_size:
+    input:
+        brains=expand(
+            rules.bias_field_correction.output.corrected,
+            subject=config["subjects"],
+            allow_missing=True,
+        ),
+    output:
+        txt=bids(
+            root="out/brainsize",
+            session="{session}",
+            datatype="anat",
+            desc="threshold{threshold}",
+            suffix="avgbrainsize.txt",
+        )
+    script:
+        "scripts/calc_avg_brain_size.py"
+
+
+rule calc_brain_size_diff:
+    input:
+        bl_brainsize=expand(
+            rules.calc_avg_brain_size.output.txt, 
+            session="BL", 
+            allow_missing=True
+        )[0],
+        fu_brainsize=expand(
+            rules.calc_avg_brain_size.output.txt, 
+            session="FU", 
+            allow_missing=True
+        )[0]
+    output:
+        brainsize_diff=bids(
+            root="out/brainsize_diff",
+            datatype="anat",
+            desc="threshold{threshold}",
+            suffix="brainsizediff.txt"
+        )
+    run:
+        with open(input["bl_brainsize"], "r") as bl_in:
+            bl_size = float(bl_in.read())
+        with open(input["fu_brainsize"], "r") as fu_in:
+            fu_size = float(fu_in.read())
+        with open(output["brainsize_diff"], "w") as out:
+            out.write(str(fu_size - bl_size))
+
+
+rule all:
+    input:
+        expand(
+            rules.calc_brain_size_diff.output.brainsize_diff,
+            threshold=config["threshold"],
+        ),
+    default_target: True
