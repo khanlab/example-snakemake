@@ -1,0 +1,29 @@
+rule bet:
+    input:
+        t1w="data/sub-{subject}/ses-{session}/anat/sub-{subject}_ses-{session}_T1w.nii.gz",
+    output:
+        brain="out/bet/sub-{subject}/ses-{session}/anat/sub-{subject}_ses-{session}_desc-brainthreshold{threshold}_T1w.nii.gz",
+    params:
+        threshold=lambda wildcards: f"0.{wildcards.threshold}",
+    shell:
+        "bet {input} {output} -f {params.threshold}"
+
+
+rule bias_field_correction:
+    input:
+        brain=rules.bet.output.brain,
+    output:
+        corrected="out/biasfieldcorrection/sub-{subject}/ses-{session}/anat/sub-{subject}_ses-{session}_desc-correctedbrainthreshold{threshold}_T1w.nii.gz",
+    shell:
+        "N4BiasFieldCorrection -d 3 -i {input.brain} -o {output.corrected}"
+
+
+rule all:
+    input:
+        expand(
+            rules.bias_field_correction.output,
+            subject=[314, 316],
+            session=["BL", "FU"],
+            threshold=[5],
+        )
+    default_target: True
