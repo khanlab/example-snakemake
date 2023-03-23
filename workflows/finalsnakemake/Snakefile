@@ -1,0 +1,81 @@
+# Only a few subjects for the sake of time
+SUBJ_IDS = [
+    314,
+    316,
+    318,
+    319,
+    320,
+]
+
+
+rule bet:
+    input:
+        t1w=(
+            "data/sub-{subject}/ses-{session}/anat/"
+            "sub-{subject}_ses-{session}_T1w.nii.gz"
+        ),
+    output:
+        brain=(
+            "out/bet/sub-{subject}/ses-{session}/anat/"
+            "sub-{subject}_ses-{session}_desc-brainthreshold{threshold}_T1w.nii.gz"
+        ),
+    params:
+        threshold=lambda wildcards: f"0.{wildcards.threshold}",
+    shell:
+        "bet {input} {output} -f {params.threshold}"
+
+
+rule bias_field_correction:
+    input:
+        brain=rules.bet.output.brain,
+    output:
+        corrected=(
+            "out/biasfieldcorrection/sub-{subject}/ses-{session}/anat/"
+            "sub-{subject}_ses-{session}_"
+            "desc-correctedbrainthreshold{threshold}_T1w.nii.gz"
+        ),
+    shell:
+        "N4BiasFieldCorrection -d 3 -i {input.brain} -o {output.corrected}"
+
+
+rule calc_avg_brain_size:
+    input:
+        brains=expand(
+            rules.bias_field_correction.output.corrected,
+            subject=SUBJ_IDS,
+            allow_missing=True,
+        ),
+    output:
+        txt=(
+            "out/brainsize/ses-{session}/anat/"
+            "ses-{session}_desc-threshold{threshold}_avgbrainsize.txt"
+        ),
+    script:
+        "scripts/calc_avg_brain_size.py"
+
+
+rule calc_brain_size_diff:
+    input:
+        bl_brainsize=expand(
+            rules.calc_avg_brain_size.output.txt, session="BL", allow_missing=True
+        )[0],
+        fu_brainsize=expand(
+            rules.calc_avg_brain_size.output.txt, session="FU", allow_missing=True
+        )[0],
+    output:
+        brainsize_diff=(
+            "out/brainsize_diff/anat/" "desc-threshold{threshold}_brainsizediff.txt"
+        ),
+    run:
+        with open(input["bl_brainsize"], "r") as bl_in:
+            bl_size = float(bl_in.read())
+        with open(input["fu_brainsize"], "r") as fu_in:
+            fu_size = float(fu_in.read())
+        with open(output["brainsize_diff"], "w") as out:
+            out.write(str(fu_size - bl_size))
+
+
+rule all:
+    input:
+        expand(rules.calc_brain_size_diff.output.brainsize_diff, threshold=6),
+    default_target: True
