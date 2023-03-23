@@ -1,0 +1,7 @@
+rule bet:
+    input:
+        t1w="data/sub-{subject}/ses-{session}/anat/sub-{subject}_ses-{session}_T1w.nii.gz",
+    output:
+        brain="out/bet/sub-{subject}/ses-{session}/anat/sub-{subject}_ses-{session}_desc-brain_T1w.nii.gz",
+    shell:
+        "bet {input} {output}"
