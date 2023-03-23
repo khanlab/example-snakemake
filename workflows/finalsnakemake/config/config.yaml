@@ -1,0 +1,6 @@
+subjects:
+  - 314
+  - 316
+
+# Threshold to use for BET, prepended by "0." (e.g. "75" here becomes "0.75")
+threshold: 75

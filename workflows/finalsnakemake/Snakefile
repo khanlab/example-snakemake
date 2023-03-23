@@ -1,11 +1,4 @@
-# Only a few subjects for the sake of time
-SUBJ_IDS = [
-    314,
-    316,
-    318,
-    319,
-    320,
-]
+configfile: "config/config.yaml"
 
 
 rule bet:
@@ -42,7 +35,7 @@ rule calc_avg_brain_size:
     input:
         brains=expand(
             rules.bias_field_correction.output.corrected,
-            subject=SUBJ_IDS,
+            subject=config["subjects"],
             allow_missing=True,
         ),
     output:
@@ -77,5 +70,8 @@ rule calc_brain_size_diff:
 
 rule all:
     input:
-        expand(rules.calc_brain_size_diff.output.brainsize_diff, threshold=6),
+        expand(
+            rules.calc_brain_size_diff.output.brainsize_diff,
+            threshold=config["threshold"],
+        ),
     default_target: True
