@@ -1,0 +1,9 @@
+rule bet:
+    input:
+        t1w="data/sub-{subject}/ses-{session}/anat/sub-{subject}_ses-{session}_T1w.nii.gz",
+    output:
+        brain="out/bet/sub-{subject}/ses-{session}/anat/sub-{subject}_ses-{session}_desc-brainthreshold{threshold}_T1w.nii.gz",
+    params:
+        threshold=lambda wildcards: f"0.{wildcards.threshold}",
+    shell:
+        "bet {input} {output} -f {params.threshold}"
