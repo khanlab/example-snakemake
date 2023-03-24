@@ -57,7 +57,7 @@ rule calc_brain_size_diff:
         )[0],
     output:
         brainsize_diff=(
-            "out/brainsize_diff/anat/" "desc-threshold{threshold}_brainsizediff.txt"
+            "out/brainsize_diff/anat/desc-threshold{threshold}_brainsizediff.txt"
         ),
     run:
         with open(input["bl_brainsize"], "r") as bl_in:
