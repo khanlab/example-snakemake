@@ -1,7 +1,7 @@
 rule bet:
     input:
-        t1w="data/sub-101/ses-BL/anat/sub-101_ses-BL_T1w.nii.gz",
+        t1w="data/sub-314/ses-BL/anat/sub-314_ses-BL_T1w.nii.gz",
     output:
-        brain="out/bet/sub-101/ses-BL/anat/sub-101_ses-BL_desc-brain_T1w.nii.gz",
+        brain="out/bet/sub-314/ses-BL/anat/sub-314_ses-BL_desc-brain_T1w.nii.gz",
     shell:
         "bet {input} {output}"
