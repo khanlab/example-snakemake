@@ -1,0 +1,11 @@
+image:
+  file: .gitpod.Dockerfile
+
+tasks:
+  - name: Setup environment
+    init: conda init bash && conda activate snakebids-env
+    command: echo "Ready to go!"
+
+ports:
+  - port: 8888
+    onOpen: ignore
