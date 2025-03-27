@@ -1,0 +1,12 @@
+This dataset was obtained from the OpenfMRI project (http://www.openfmri.org).
+
+Accession #: ds000174
+Description: T1-weighted structural MRI study of cannabis users at baseline and 3 years follow up
+
+The scores from the CUDIT (Cannabis Use Disorder Identification Test) and AUDIT
+(Alcohol Use Disorder Identification Test) are included in the participants.tsv file.
+
+This dataset is made available under the Creative Commons Attribution-NonCommercial 4.0
+International license: http://creativecommons.org/licenses/by-nc/4.0/legalcode.txt
+
+
